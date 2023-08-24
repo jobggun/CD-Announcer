@@ -5,7 +5,7 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define CD_VERSION "3.0.1"
+#define CD_VERSION "3.0.2"
 
 ConVar g_hVersion						   = null;
 ConVar g_hPrintMode						   = null;
@@ -96,7 +96,7 @@ public void OnMapStart()
 	}
 	else
 	{
-		LogMessage("%t %s", "File Not Found", sPath);
+		LogMessage("File Not Found: %s", sPath);
 	}
 }
 
