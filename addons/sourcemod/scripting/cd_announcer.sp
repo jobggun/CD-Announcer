@@ -5,11 +5,11 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define CD_VERSION "3.0.2"
+#define CD_VERSION "3.1.0"
 
 ConVar g_hVersion						   = null;
 ConVar g_hPrintMode						   = null;
-ConVar g_hShowAll						   = null;
+ConVar g_hType							   = null;
 ConVar g_hSound							   = null;
 ConVar g_hPrintCountry					   = null;
 ConVar g_hShowAdmins					   = null;
@@ -17,8 +17,16 @@ ConVar g_hCountryAbbr					   = null;
 ConVar g_hSoundFile						   = null;
 ConVar g_hLogging						   = null;
 
-char   g_sSoundFilePath[PLATFORM_MAX_PATH] = "buttons/blip1.wav";
-int	   g_iLogging						   = 1;
+int g_iPrintMode = 1;
+int g_iType = 3;
+bool g_boolSound = true;
+bool g_boolPrintCountry = true;
+bool g_boolShowAdmins = true;
+bool g_boolCountryAbbr = true;
+char g_sSoundFilePath[PLATFORM_MAX_PATH] = "buttons/blip1.wav";
+int g_iLogging = 3;
+
+
 
 public Plugin myinfo =
 {
@@ -27,8 +35,6 @@ public Plugin myinfo =
 	description = "",
 	version		= CD_VERSION,
 	url			= "www.sourcemod.net"
-
-
 }
 
 public void OnPluginStart()
@@ -37,7 +43,7 @@ public void OnPluginStart()
 	g_hVersion		= CreateConVar("cd_announcer_version", CD_VERSION, "Connect/Disconnect Announcer Version", FCVAR_SPONLY | FCVAR_REPLICATED | FCVAR_NOTIFY);
 
 	g_hPrintMode	= CreateConVar("cd_mode", "1", "1 = SteamID only, 2 = IP only, 3 = Both, 0 = None (Def 1)", _, true, 0.0, true, 3.0);
-	g_hShowAll		= CreateConVar("cd_showall", "3", "1 = Connection only, 2 = Disconnection only, 3 = Both (Def 3)", _, true, 1.0, true, 3.0);
+	g_hType			= CreateConVar("cd_type", "3", "1 = Connection only, 2 = Disconnection only, 3 = Both (Def 3)", _, true, 1.0, true, 3.0);
 	g_hSound		= CreateConVar("cd_sound", "1", "Toggles sound (Def 1)", _, true, 0.0, true, 1.0);
 	g_hPrintCountry = CreateConVar("cd_printcountry", "1", "Toggles printing country names (Def 1)", _, true, 0.0, true, 1.0);
 	g_hShowAdmins	= CreateConVar("cd_showadmins", "1", "Shows Admins on connect/disconnect (Def 1)", _, true, 0.0, true, 1.0);
@@ -45,20 +51,61 @@ public void OnPluginStart()
 	g_hSoundFile	= CreateConVar("cd_sound_file", "buttons/blip1.wav", "Sound file location to be played on a connect/disconnect under the sounds directory (Def =buttons/blip1.wav)");
 	g_hLogging		= CreateConVar("cd_loggin", "3", "1 = Printing only, 2 = Logging only, 3 = Both (Def 3)", _, true, 1.0, true, 3.0);
 
-	HookConVarChange(g_hLogging, OnLoggingChange);
-	HookConVarChange(g_hSoundFile, OnSoundFileChange);
+	g_hPrintMode.AddChangeHook(OnPrintModeChange);
+	g_hType.AddChangeHook(OnTypeChange);
+	g_hSound.AddChangeHook(OnSoundChange);
+	g_hPrintCountry.AddChangeHook(OnPrintCountryChange);
+	g_hShowAdmins.AddChangeHook(OnShowAdminsChange);
+	g_hCountryAbbr.AddChangeHook(OnCountryAbbrChange);
+	g_hSoundFile.AddChangeHook(OnSoundFileChange);
+	g_hLogging.AddChangeHook(OnLoggingChange);
 
 	AutoExecConfig(true, "CD_Announcer");
 }
 
+public void OnPrintModeChange(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+	g_iPrintMode = StringToInt(newValue);
+}
+public void OnTypeChange(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+	g_iType = StringToInt(newValue);
+}
+public void OnSoundChange(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+	g_boolSound = StringToInt(newValue) != 0;
+}
+public void OnPrintCountryChange(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+	g_boolPrintCountry = StringToInt(newValue) != 0;
+}
+public void OnShowAdminsChange(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+	g_boolShowAdmins = StringToInt(newValue) != 0;
+}
+public void OnCountryAbbrChange(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+	g_boolCountryAbbr = StringToInt(newValue) != 0;
+}
+public void OnSoundFileChange(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+	strcopy(g_sSoundFilePath, sizeof(g_sSoundFilePath), newValue);
+}
 public void OnLoggingChange(ConVar convar, const char[] oldValue, const char[] newValue)
 {
 	g_iLogging = StringToInt(newValue);
 }
 
-public void OnSoundFileChange(ConVar convar, const char[] oldValue, const char[] newValue)
+public void OnConfigsExecuted()
 {
-	strcopy(g_sSoundFilePath, sizeof(g_sSoundFilePath), newValue);
+	g_iPrintMode = g_hPrintMode.IntValue;
+	g_iType = g_hType.IntValue;
+	g_boolSound = g_hSound.BoolValue;
+	g_boolPrintCountry = g_hPrintCountry.BoolValue;
+	g_boolShowAdmins = g_hShowAdmins.BoolValue;
+	g_boolCountryAbbr = g_hCountryAbbr.BoolValue;
+	g_hSoundFile.GetString(g_sSoundFilePath, sizeof(g_sSoundFilePath));
+	g_iLogging = g_hLogging.IntValue;
 }
 
 stock void LogCDMessage(const char[] message, any...)
@@ -75,12 +122,6 @@ stock void LogCDMessage(const char[] message, any...)
 	LogToFile(sFileName, sFormattedMessage);
 }
 
-public void OnConfigsExecuted()
-{
-	g_iLogging = g_hLogging.IntValue;
-	g_hSoundFile.GetString(g_sSoundFilePath, sizeof(g_sSoundFilePath));
-}
-
 public void OnMapStart()
 {
 	char sPath[PLATFORM_MAX_PATH];
@@ -90,7 +131,7 @@ public void OnMapStart()
 	{
 		return;
 	}
-	else if (FileExists(sPath, true))
+	else if (FileExists(sPath))
 	{
 		PrecacheSound(sPath, true);
 	}
@@ -122,7 +163,7 @@ stock const char g_sConnected[4][2][] =
 
 public void OnClientPostAdminCheck(int client)
 {
-	Announce(client, 0, g_sConnected[g_hPrintMode.IntValue % 4][g_hPrintCountry.IntValue % 2], "connected");
+	Announce(client, 0, g_sConnected[g_iPrintMode][view_as<int>(g_boolPrintCountry)], "connected");
 }
 
 stock const char g_sDisconnected[4][2][] =
@@ -147,7 +188,7 @@ stock const char g_sDisconnected[4][2][] =
 
 public void OnClientDisconnect(int client)
 {
-	Announce(client, 1, g_sDisconnected[g_hPrintMode.IntValue % 4][g_hPrintCountry.IntValue % 2], "disconnected");
+	Announce(client, 1, g_sDisconnected[g_iPrintMode][view_as<int>(g_boolPrintCountry)], "disconnected");
 }
 
 stock void Announce(int client, int type, const char[] translation, const char[] message)
@@ -156,11 +197,11 @@ stock void Announce(int client, int type, const char[] translation, const char[]
 	{
 		return;
 	}
-	else if (!(g_hShowAll.IntValue & (1 << type)))
+	else if (!(g_iType & (1 << type)))
 	{
 		return;
 	}
-	else if(GetUserAdmin(client) != INVALID_ADMIN_ID && !g_hShowAdmins.BoolValue)
+	else if(GetUserAdmin(client) != INVALID_ADMIN_ID && !g_boolShowAdmins)
 	{
 		return;
 	}
@@ -180,7 +221,7 @@ stock void Announce(int client, int type, const char[] translation, const char[]
 		Format(country, sizeof(country), "%t", "Network");
 	}
 
-	if (g_hSound.BoolValue)
+	if (g_boolSound)
 	{
 		EmitSoundToAll(g_sSoundFilePath);
 	}
@@ -197,7 +238,7 @@ stock void Announce(int client, int type, const char[] translation, const char[]
 
 stock void GetCountryString(const char[] ip, char[] country, int maxlength)
 {
-	if (g_hCountryAbbr.BoolValue)
+	if (g_boolCountryAbbr)
 	{
 		char sCountryAbbr[3];
 		GeoipCode2(ip, sCountryAbbr);
