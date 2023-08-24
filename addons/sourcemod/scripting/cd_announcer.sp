@@ -215,12 +215,6 @@ stock void Announce(int client, int type, const char[] translation, const char[]
 	GetClientIP(client, ip, sizeof(ip));
 	GetClientAuthId(client, AuthId_Steam2, auth, sizeof(auth));
 
-	GetCountryString(ip, country, sizeof(country));
-	if (country[0] == '\0')
-	{
-		Format(country, sizeof(country), "%t", "Network");
-	}
-
 	if (g_boolSound)
 	{
 		EmitSoundToAll(g_sSoundFilePath);
@@ -228,15 +222,35 @@ stock void Announce(int client, int type, const char[] translation, const char[]
 
 	if (g_iLogging & (1 << 0))
 	{
-		PrintToChatAll("%t", translation, name, auth, country, ip);
+		for(int i = 1; i <= MaxClients; i++)
+		{
+			if(!IsClientInGame(i))
+			{
+				continue;
+			}
+
+			GetCountryString(ip, country, sizeof(country), client);
+			if (country[0] == '\0')
+			{
+				Format(country, sizeof(country), "%T", "Network", client);
+			}
+
+			PrintToChat(client, "%T", translation, client, name, auth, country, ip);
+		}
 	}
 	if (g_iLogging & (1 << 1))
 	{
+		GetCountryString(ip, country, sizeof(country));
+		if (country[0] == '\0')
+		{
+			Format(country, sizeof(country), "%T", "Network", -1);
+		}
+	
 		LogCDMessage("%s(%s)[%s][%s] %s", name, auth, country, ip, message);
 	}
 }
 
-stock void GetCountryString(const char[] ip, char[] country, int maxlength)
+stock void GetCountryString(const char[] ip, char[] country, int maxlength, int client = -1)
 {
 	if (g_boolCountryAbbr)
 	{
@@ -246,6 +260,6 @@ stock void GetCountryString(const char[] ip, char[] country, int maxlength)
 	}
 	else
 	{
-		GeoipCountry(ip, country, maxlength);
+		GeoipCountryEx(ip, country, maxlength, client);
 	}
 }
