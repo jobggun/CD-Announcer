@@ -5,7 +5,7 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define CD_VERSION "3.0"
+#define CD_VERSION "3.0.1"
 
 ConVar g_hVersion						   = null;
 ConVar g_hPrintMode						   = null;
@@ -36,15 +36,15 @@ public void OnPluginStart()
 	LoadTranslations("cdannouncer.phrases");
 	g_hVersion		= CreateConVar("cd_announcer_version", CD_VERSION, "Connect/Disconnect Announcer Version", FCVAR_SPONLY | FCVAR_REPLICATED | FCVAR_NOTIFY);
 
-	g_hPrintMode	= CreateConVar("cd_mode", "0", "1 = by SteamId, 2 = by Ip, 3 = ip and SteamId, 0 = No ip and SteamId (Def 1)", 0, true, 0.0, true, 4.0);
-	g_hShowAll		= CreateConVar("cd_showall", "1", "1 = show connection only, 2 = show disconnection only, 3 = show both", 0, true, 1.0, true, 3.0);
-	g_hSound		= CreateConVar("cd_sound", "1", "Toggles sound on and off (Def 1 = on)", 0, true, 0.0, true, 1.0);
-	g_hPrintCountry = CreateConVar("cd_printcountry", "1", "turns on/off priting country names 0 = off, 1= on (Def 1)", 0, true, 0.0, true, 1.0);
-	g_hShowAdmins	= CreateConVar("cd_showadmins", "1", "Shows Admins on connect/disconnect, 0= don't show, 1 = show (Def 1)", 0, true, 0.0, true, 1.0);
-	g_hCountryAbbr	= CreateConVar("cd_country_abbr", "0", "If enabled, country names are printed in shorthand (Def 1)", 0, true, 0.0, true, 1.0);
+	g_hPrintMode	= CreateConVar("cd_mode", "1", "1 = SteamID only, 2 = IP only, 3 = Both, 0 = None (Def 1)", _, true, 0.0, true, 3.0);
+	g_hShowAll		= CreateConVar("cd_showall", "3", "1 = Connection only, 2 = Disconnection only, 3 = Both (Def 3)", _, true, 1.0, true, 3.0);
+	g_hSound		= CreateConVar("cd_sound", "1", "Toggles sound (Def 1)", _, true, 0.0, true, 1.0);
+	g_hPrintCountry = CreateConVar("cd_printcountry", "1", "Toggles printing country names (Def 1)", _, true, 0.0, true, 1.0);
+	g_hShowAdmins	= CreateConVar("cd_showadmins", "1", "Shows Admins on connect/disconnect (Def 1)", _, true, 0.0, true, 1.0);
+	g_hCountryAbbr	= CreateConVar("cd_country_abbr", "1", "Toggles printing country names in shorthand (Def 1)", _, true, 0.0, true, 1.0);
 	g_hSoundFile	= CreateConVar("cd_sound_file", "buttons/blip1.wav", "Sound file location to be played on a connect/disconnect under the sounds directory (Def =buttons/blip1.wav)");
-	g_hLogging		= CreateConVar("cd_loggin", "3", "1 = PrintToChat only, 2 = Logging only, 3 = Both (Def 3)", _, true, 1.0, true, 3.0);
-	
+	g_hLogging		= CreateConVar("cd_loggin", "3", "1 = Printing only, 2 = Logging only, 3 = Both (Def 3)", _, true, 1.0, true, 3.0);
+
 	HookConVarChange(g_hLogging, OnLoggingChange);
 	HookConVarChange(g_hSoundFile, OnSoundFileChange);
 
