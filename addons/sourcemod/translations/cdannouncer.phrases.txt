@@ -2,178 +2,105 @@
 //char 4:  <-- this is used for green chat color
 "Phrases"
 {
-	"File Not Found"
-	{
-		"en"			"File not found"
-		"es"			"Archivo no encontrado"
-		"ru"			"Файл не найден"
-	}
-	"Start Log"
-	{
-		"en"			"Start logging"
-		"es"			"Comienzo de Registro"
-		"ru"			"Лог начат"
-	}
-	"End Log"
-	{
-		"en"			"End logging"
-		"es"			"Fin de Registro"
-		"ru"			"Лог закончен"
-	}
-	"File Not Created"
-	{
-		"en"			"Cannot create log file"
-		"es"			"No se puede crear archivo de registro"
-		"ru"			"Невозможно создать лог файл"
-	}
 	"Network"
 	{
 		"en"			"local network"
-		"es"			"Red Local"
-		"ru"			"☺не найдена. ♦(локальная сеть)"
+		"ko"			"내부 망"
 	}
-	"Connected_Auth_1"
+	"Connected"
 	{
-		"#format"	"{1:s},{2:s}" // name, steamid
-		"en"		"[+] {1} ({2}) connected"
-		"es"		"[+] {1} ({2}) conectado"
-		"ru"		"[+] {1} ({2}) подключен"
-		"cze"		"[+] {1} ({2}) připojil"
-		"sk"		"[+] {1} ({2}) připojil"
+		"#format"	"{1:s},{2:s},{3:s},{4:s}" // name, auth, country, ip
+		"en"		"{1} connected"
+		"ko"		"{1} 연결됨"
 	}
-	"Connected_Auth_2"
+	"Connected_Country"
 	{
-		"#format"	"{1:s},{2:s},{3:s}" // name, country, steamid
-		"en"		"[+] {1} ({3}) connected from {2}"
-		"es"		"[+] {1} ({3}) conectado desde {2}"
-		"ru"		"[+] {1} ({3}) подключен. Страна {2}"
-		"cze"		"[+] {1} ({3}) připojil z {2}"
-		"sk"		"[+] {1} ({3}) připojil z {2}"
+		"#format"	"{1:s},{2:s},{3:s},{4:s}" // name, auth, country, ip
+		"en"		"{1} connected from {3}"
+		"ko"		"{1} 연결됨, 국가: {3}"
 	}
-	"Connected_Ip_1"
+	"Connected_Auth"
 	{
-		"#format"	"{1:s},{2:s}" // name, ip
-		"en"		"[+] {1} ({2}) connected"
-		"es"		"[+] {1} ({2}) conectado"
-		"ru"		"[+] {1} ({2}) подключен"
-		"cze"		"[+] {1} ({2}) připojil"
-		"sk"		"[+] {1} ({2}) připojil"
+		"#format"	"{1:s},{2:s},{3:s},{4:s}" // name, auth, country, ip
+		"en"		"{1} ({2}) connected"
+		"ko"		"{1} ({2})  연결됨"
 	}
-	"Connected_Ip_2"
+	"Connected_Auth_Country"
 	{
-		"#format"	"{1:s},{2:s},{3:s}" // name, country, ip
-		"en"		"[+] {1} ({3}) connected from {2}"
-		"es"		"[+] {1} ({3}) conectado desde {2}"
-		"ru"		"[+] {1} ({3}) подключен. Страна {2}"
-		"cze"		"[+] {1} ({3}) připojil z {2}"
-		"sk"		"[+] {1} ({3}) připojil z {2}"
+		"#format"	"{1:s},{2:s},{3:s},{4:s}" // name, auth, country, ip
+		"en"		"{1} ({2}) connected from {3}"
+		"ko"		"{1} ({2}) 연결됨, 국가: {3}"
 	}
-	"Connected_1"
+	"Connected_IP"
 	{
-		"#format"	"{1:s},{2:s},{3:s}" // name, auth, ip
-		"en"		"[+] {1} ({2}) connected from {3}"
-		"es"		"[+] {1} ({2}) conectado desde {3}"
-		"ru"		"[+] {1} ({2}) подключен. Страна {3}"
-		"cze"		"[+] {1} ({2}) připojil z {3}"
-		"sk"		"[+] {1} ({2}) připojil z {3}"
+		"#format"	"{1:s},{2:s},{3:s},{4:s}" // name, auth, country, ip
+		"en"		"{1} connected from {4}"
+		"ko"		"{1} 연결됨, IP: {4}"
 	}
-	"Connected_2"
+	"Connected_Country_IP"
 	{
-		"#format"	"{1:s},{2:s},{3:s},{4:s}" // name, country, auth, ip
-		"en"		"[+] {1} ({3}) connected from {2}({4})"
-		"es"		"[+] {1} ({3}) conectado desde {2}({4})"
-		"ru"		"[+] {1} ({3}) подключен. Страна {2}({4})"
-		"cze"		"[+] {1} ({3}) připojil z {2}({4})"
-		"sk"		"[+] {1} ({3}) připojil z {2}({4})"
+		"#format"	"{1:s},{2:s},{3:s},{4:s}" // name, auth, country, ip
+		"en"		"{1} connected from {3}({4})"
+		"ko"		"{1} 연결됨, 국가: {3}, IP: {4}"
 	}
-	"Connected_Country_1"
+	"Connected_Auth_IP"
 	{
-		"#format"	"{1:s}" // name
-		"en"		"[+] {1} connected"
-		"es"		"[+] {1} conectado"
-		"ru"		"[+] {1} подключен"
-		"cze"		"[+] {1} připojil"
-		"sk"		"[+] {1} připojil"
+		"#format"	"{1:s},{2:s},{3:s},{4:s}" // name, auth, country, ip
+		"en"		"{1} ({2}) connected from {4}"
+		"ko"		"{1} ({2}) 연결됨, IP: {4}"
 	}
-	"Connected_Country_2"
+	"Connected_Auth_Country_IP"
 	{
-		"#format"	"{1:s},{2:s}" // name, country
-		"en"		"[+] {1} connected from {2}"
-		"es"		"[+] {1} conectado desde {2}"
-		"ru"		"[+] {1} подключен. Страна {2}"
-		"cze"		"[+] {1} připojil z {2}"
-		"sk"		"[+] {1} připojil z {2}"
+		"#format"	"{1:s},{2:s},{3:s},{4:s}" // name, auth, country, ip
+		"en"		"{1} ({2}) connected from {3}({4})"
+		"ko"		"{1} ({2}) 연결됨, 국가: {3}, IP: {4}"
 	}
-	"Disconnected_Auth_1"
+	"Disconnected"
 	{
-		"#format"	"{1:s},{2:s}" // name, steamid
-		"en"		"[-] {1} ({2}) disconnected"
-		"es"		"[-] {1} ({2}) desconectado"
-		"ru"		"[-] {1} ({2}) отключен"
-		"cze"		"[-] {1} ({2}) odpojil"
-		"sk"		"[-] {1} ({2}) odpojil"
+		"#format"	"{1:s},{2:s},{3:s},{4:s}" // name, auth, country, ip
+		"en"		"{1} disconnected"
+		"ko"		"{1} 연결종료됨"
 	}
-	"Disconnected_Auth_2"
+	"Disconnected_Country"
 	{
-		"#format"	"{1:s},{2:s},{3:s}" // name, country, steamid
-		"en"		"[-] {1} ({3}) disconnected from {2}"
-		"es"		"[-] {1} ({3}) desconectado desde {2}"
-		"ru"		"[-] {1} ({3}) отключен. Страна {2}"
-		"cze"		"[-] {1} ({3}) odpojil z {2}"
-		"sk"		"[-] {1} ({3}) odpojil z {2}"
+		"#format"	"{1:s},{2:s},{3:s},{4:s}" // name, auth, country, ip
+		"en"		"{1} disconnected from {3}"
+		"ko"		"{1} 연결종료됨, 국가: {3}"
 	}
-	"Disconnected_Country_1"
+	"Disconnected_Auth"
 	{
-		"#format"	"{1:s}" // name
-		"en"		"[-] {1} disconnected"
-		"es"		"[-] {1} desconectado"
-		"ru"		"[-] {1} отключен"
-		"cze"		"[-] {1} odpojil"
-		"sk"		"[-] {1} odpojil"
+		"#format"	"{1:s},{2:s},{3:s},{4:s}" // name, auth, country, ip
+		"en"		"{1} ({2}) disconnected"
+		"ko"		"{1} ({2})  연결종료됨"
 	}
-	"Disconnected_Country_2"
+	"Disconnected_Auth_Country"
 	{
-		"#format"	"{1:s},{2:s}" // name, country
-		"en"		"[-] {1} odpojil z {2}"
-		"es"		"[-] {1} desconectado desde {2}"
-		"ru"		"[-] {1} отключен. Страна {2}"
-		"cze"		"[-] {1} odpojil z {2}"
-		"sk"		"[-] {1} odpojil z {2}"
+		"#format"	"{1:s},{2:s},{3:s},{4:s}" // name, auth, country, ip
+		"en"		"{1} ({2}) disconnected from {3}"
+		"ko"		"{1} ({2}) 연결종료됨, 국가: {3}"
 	}
-	"Disconnected_Ip_1"
+	"Disconnected_IP"
 	{
-		"#format"	"{1:s},{2:s}" // name, ip
-		"en"		"[-] {1} ({2}) disconnected"
-		"es"		"[-] {1} ({2}) desconectado"
-		"ru"		"[-] {1} ({2}) отключен"
-		"cze"		"[-] {1} ({2}) odpojil"
-		"sk"		"[-] {1} ({2}) odpojil"
+		"#format"	"{1:s},{2:s},{3:s},{4:s}" // name, auth, country, ip
+		"en"		"{1} disconnected from {4}"
+		"ko"		"{1} 연결종료됨, IP: {4}"
 	}
-	"Disconnected_Ip_2"
+	"Disconnected_Country_IP"
 	{
-		"#format"	"{1:s},{2:s},{3:s}" // name, country, ip
-		"en"		"[-] {1} ({3}) disconnected from {2}"
-		"es"		"[-] {1} ({3}) desconectado desde {2}"
-		"ru"		"[-] {1} ({3}) отключен. Страна {2}"
-		"cze"		"[-] {1} ({3}) odpojil z {2}"
-		"sk"		"[-] {1} ({3}) odpojil z {2}"
+		"#format"	"{1:s},{2:s},{3:s},{4:s}" // name, auth, country, ip
+		"en"		"{1} disconnected from {3}({4})"
+		"ko"		"{1} 연결종료됨, 국가: {3}, IP: {4}"
 	}
-	"Disconnected_1"
+	"Disconnected_Auth_IP"
 	{
-		"#format"	"{1:s},{2:s},{3:s}" // name, auth, ip
-		"en"		"[-] {1} ({2}) disconnected from {3}"
-		"es"		"[-] {1} ({2}) desconectado desde {3}"
-		"ru"		"[-] {1} ({2}) отключен. Страна {3}"
-		"cze"		"[-] {1} ({2}) odpojil z {3}"
-		"sk"		"[-] {1} ({2}) odpojil z {3}"
+		"#format"	"{1:s},{2:s},{3:s},{4:s}" // name, auth, country, ip
+		"en"		"{1} ({2}) disconnected from {4}"
+		"ko"		"{1} ({2}) 연결종료됨, IP: {4}"
 	}
-	"Disconnected_2"
+	"Disconnected_Auth_Country_IP"
 	{
-		"#format"	"{1:s},{2:s},{3:s},{4:s}" // name, country, auth, ip
-		"en"		"[-] {1} ({3}) disconnected from {2}({4})"
-		"es"		"[-] {1} ({3}) desconectado desde {2}({4})"
-		"ru"		"[-] {1} ({3}) отключен. Страна {2}({4})"
-		"cze"		"[-] {1} ({3}) odpojil z {2}({4})"
-		"sk"		"[-] {1} ({3}) odpojil z {2}({4})"
+		"#format"	"{1:s},{2:s},{3:s},{4:s}" // name, auth, country, ip
+		"en"		"{1} ({2}) disconnected from {3}({4})"
+		"ko"		"{1} ({2}) 연결종료됨, 국가: {3}, IP: {4}"
 	}
 }

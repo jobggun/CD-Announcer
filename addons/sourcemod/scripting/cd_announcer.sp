@@ -1,330 +1,210 @@
 #include <sourcemod>
 #include <sdktools_sound>
-#include "geoip.inc"
+#include <geoip>
 
+#pragma newdecls required
 #pragma semicolon 1
 
-#define CD_VERSION "2.9"
+#define CD_VERSION "3.0"
 
-new Handle:PrintMode		= INVALID_HANDLE;
-new Handle:PrintModeLog		= INVALID_HANDLE;
-new Handle:ShowAll 		= INVALID_HANDLE;
-new Handle:Sound		= INVALID_HANDLE;
-new Handle:PrintCountry		= INVALID_HANDLE;
-new Handle:ShowAdmins		= INVALID_HANDLE;
-new Handle:CountryNameType	= INVALID_HANDLE;
-new Handle:SoundFile		= INVALID_HANDLE;
-new Handle:Logging		= INVALID_HANDLE;
-new Handle:LogFile		= INVALID_HANDLE;
-new Handle:File			= INVALID_HANDLE;
-new log = -1;
+ConVar g_hVersion						   = null;
+ConVar g_hPrintMode						   = null;
+ConVar g_hShowAll						   = null;
+ConVar g_hSound							   = null;
+ConVar g_hPrintCountry					   = null;
+ConVar g_hShowAdmins					   = null;
+ConVar g_hCountryAbbr					   = null;
+ConVar g_hSoundFile						   = null;
+ConVar g_hLogging						   = null;
 
-public Plugin:myinfo = 
+char   g_sSoundFilePath[PLATFORM_MAX_PATH] = "buttons/blip1.wav";
+int	   g_iLogging						   = 1;
+
+public Plugin myinfo =
 {
-	name = "CD Announcer",
-	author = "Fredd, gH0sTy, MOPO3KO",
+	name		= "CD Announcer",
+	author		= "Fredd, gH0sTy, MOPO3KO, Monera",
 	description = "",
-	version = CD_VERSION,
-	url = "www.sourcemod.net"
+	version		= CD_VERSION,
+	url			= "www.sourcemod.net"
+
+
 }
 
-public OnPluginStart()
+public void OnPluginStart()
 {
-	LoadTranslations( "cdannouncer.phrases" );
-	CreateConVar( "cd_announcer_version", CD_VERSION, "Connect/Disconnect Announcer Version", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY );
+	LoadTranslations("cdannouncer.phrases");
+	g_hVersion		= CreateConVar("cd_announcer_version", CD_VERSION, "Connect/Disconnect Announcer Version", FCVAR_SPONLY | FCVAR_REPLICATED | FCVAR_NOTIFY);
+
+	g_hPrintMode	= CreateConVar("cd_mode", "0", "1 = by SteamId, 2 = by Ip, 3 = ip and SteamId, 0 = No ip and SteamId (Def 1)", 0, true, 0.0, true, 4.0);
+	g_hShowAll		= CreateConVar("cd_showall", "1", "1 = show connection only, 2 = show disconnection only, 3 = show both", 0, true, 1.0, true, 3.0);
+	g_hSound		= CreateConVar("cd_sound", "1", "Toggles sound on and off (Def 1 = on)", 0, true, 0.0, true, 1.0);
+	g_hPrintCountry = CreateConVar("cd_printcountry", "1", "turns on/off priting country names 0 = off, 1= on (Def 1)", 0, true, 0.0, true, 1.0);
+	g_hShowAdmins	= CreateConVar("cd_showadmins", "1", "Shows Admins on connect/disconnect, 0= don't show, 1 = show (Def 1)", 0, true, 0.0, true, 1.0);
+	g_hCountryAbbr	= CreateConVar("cd_country_abbr", "0", "If enabled, country names are printed in shorthand (Def 1)", 0, true, 0.0, true, 1.0);
+	g_hSoundFile	= CreateConVar("cd_sound_file", "buttons/blip1.wav", "Sound file location to be played on a connect/disconnect under the sounds directory (Def =buttons/blip1.wav)");
+	g_hLogging		= CreateConVar("cd_loggin", "3", "1 = PrintToChat only, 2 = Logging only, 3 = Both (Def 3)", _, true, 1.0, true, 3.0);
 	
-	PrintMode	=	CreateConVar( "cd_mode", 	"1",	"1 = by SteamId, 2 = by Ip, 3 = ip and SteamId, 4 = No ip and SteamId (Def 1)",0, true, 1.0, true, 4.0);
-	PrintModeLog	=	CreateConVar( "cd_mode_log", 	"1",	"1 = by SteamId, 2 = by Ip, 3 = ip and SteamId, 4 = No ip and SteamId (Def 1)",0, true, 1.0, true, 4.0);
-	ShowAll		= 	CreateConVar( "cd_showall",	"1",	"1 = show all(connects, and disconnects), 2 = show connects only, 3 = show disconnects only",0, true, 1.0, true, 3.0);
-	Sound		=	CreateConVar( "cd_sound", 	"1",	"Toggles sound on and off (Def 1 = on)" ,0, true, 0.0, true, 1.0);
-	PrintCountry	=	CreateConVar( "cd_printcountry", "1",	"turns on/off priting country names 0 = off, 1= on (Def 1)",0, true, 0.0, true, 1.0);
-	ShowAdmins	= 	CreateConVar( "cd_showadmins", 	"1",	"Shows Admins on connect/disconnect, 0= don't show, 1 = show (Def 1)",0, true, 0.0, true, 1.0);
-	CountryNameType =	CreateConVar( "cd_country_type","1",	"country name print type 1 = print shortname, 2 = print full name(Def 1)",0, true, 1.0, true, 2.0);
-	SoundFile	=	CreateConVar( "cd_sound_file",	"buttons/blip1.wav","Sound file location to be played on a connect/disconnect under the sounds directory (Def =buttons/blip1.wav)" );
-	Logging		=	CreateConVar( "cd_loggin",	"1",	"turns on and off logging of connects and disconnect to a log file 1= on  2 = on only log annoucers 0 = off (Def 1)",0, true, 0.0, true, 2.0);
-	LogFile		=	CreateConVar( "cd_logfile",	"data/cd_logs.log", "location of the log file relative to the sourcemod folder" );
-	HookConVarChange(Logging, IsLogging);
+	HookConVarChange(g_hLogging, OnLoggingChange);
+	HookConVarChange(g_hSoundFile, OnSoundFileChange);
 
-	AutoExecConfig(true, "cd_announcer_cfgs");
+	AutoExecConfig(true, "CD_Announcer");
 }
 
-public IsLogging(Handle:convar, const String:oldValue[], const String:newValue[])
+public void OnLoggingChange(ConVar convar, const char[] oldValue, const char[] newValue)
 {
-	log = StringToInt(newValue);
-	LogOnOff();
+	g_iLogging = StringToInt(newValue);
 }
 
-public LogOnOff()
+public void OnSoundFileChange(ConVar convar, const char[] oldValue, const char[] newValue)
 {
-	decl String:Time[21];
-	FormatTime(Time, sizeof(Time), "%m/%d/%y - %I:%M:%S", -1) ;
-
-	if (log > 0) {
-		if(File != INVALID_HANDLE) return;
-
-		decl String:iLogFileLoc[PLATFORM_MAX_PATH];
-
-		GetConVarString( LogFile, iLogFileLoc, sizeof( iLogFileLoc ) );
-		BuildPath( Path_SM, iLogFileLoc, sizeof( iLogFileLoc ), iLogFileLoc);
-		File = OpenFile( iLogFileLoc, "a" );
-		
-		if(File == INVALID_HANDLE) {
-			LogMessage("%t %s","File Not Created",iLogFileLoc );
-			log = 0;
-			SetConVarInt(Logging,0,false,false);
-		}
-		else {
-			LogMessage("%t","Start Log");
-			WriteFileLine(File,"[%s] %t", Time, "Start Log");
-			FlushFile(File);
-		}
-	} else {
-		if(File != INVALID_HANDLE) {
-			LogMessage("%t", "End Log");
-			WriteFileLine(File,"[%s] %t", Time, "End Log");
-			FlushFile(File);
-			CloseHandle(File);
-			File = INVALID_HANDLE;
-		}
-	}
+	strcopy(g_sSoundFilePath, sizeof(g_sSoundFilePath), newValue);
 }
 
-public OnConfigsExecuted()
+stock void LogCDMessage(const char[] message, any...)
 {
-	if(log == -1) {
-		log = GetConVarInt(Logging);
-		LogOnOff();
-	}
+	int iSize				 = strlen(message) + 255;
+	char[] sFormattedMessage = new char[iSize];
+	VFormat(sFormattedMessage, iSize, message, 2);
+
+	char sFileName[PLATFORM_MAX_PATH];
+	char sDate[16];
+	FormatTime(sDate, sizeof(sDate), "%F");
+	BuildPath(Path_SM, sFileName, sizeof(sFileName), "logs/CD_%s.log", sDate);
+
+	LogToFile(sFileName, sFormattedMessage);
 }
 
-public OnMapStart()
+public void OnConfigsExecuted()
 {
-	decl String:FileLocation[PLATFORM_MAX_PATH];
-	GetConVarString( SoundFile, FileLocation, sizeof(FileLocation));
-	if(FileLocation[0]!=0) {
-		if(FileExists(FileLocation)) PrecacheSound(FileLocation,true);
-		else LogMessage("%t %s","File Not Found",FileLocation);
-	}
+	g_iLogging = g_hLogging.IntValue;
+	g_hSoundFile.GetString(g_sSoundFilePath, sizeof(g_sSoundFilePath));
 }
 
-public OnPluginEnd()
+public void OnMapStart()
 {
-	log = 0;
-	LogOnOff();
-}
+	char sPath[PLATFORM_MAX_PATH];
+	GetConVarString(g_hSoundFile, sPath, sizeof(sPath));
 
-public WriteLogConnect(String:Time[], String:gName[], String:gCountry[], String:gAuth[], String:gIp[])
-{
-	switch(GetConVarInt(PrintModeLog)) {
-		case 1: {
-			switch(GetConVarInt(PrintCountry)) {
-				case 0: WriteFileLine(File,"[%s] %s[%s] connected", Time, gName, gAuth);
-				case 1: WriteFileLine(File,"[%s] %s(%s)[%s] connected", Time, gName, gCountry, gAuth);
-			}	
-		}
-		case 2: {	
-			switch(GetConVarInt(PrintCountry)) {
-				case 0: WriteFileLine(File,"[%s] %s[%s] connected", Time, gName, gIp);
-				case 1: WriteFileLine(File,"[%s] %s(%s)[%s] connected", Time, gName, gCountry, gIp);
-			}	
-		}
-		case 3: {
-			switch(GetConVarInt(PrintCountry)) {
-				case 0: WriteFileLine(File,"[%s] %s[%s][%s] connected", Time, gName, gAuth, gIp);
-				case 1: WriteFileLine(File,"[%s] %s(%s)[%s][%s] connected", Time, gName, gCountry, gAuth, gIp);
-			}
-		}
-		case 4: {
-			switch(GetConVarInt(PrintCountry)) {
-				case 0: WriteFileLine(File,"[%s] %s connected", Time, gName);
-				case 1: WriteFileLine(File,"[%s] %s(%s) connected", Time, gName, gCountry);
-			}
-		}
-	}
-        FlushFile(File);
-}
-
-public PrintLogConnect(String:Time[], String:gName[], String:gCountry[], String:gAuth[], String:gIp[])
-{
-	switch(GetConVarInt(PrintMode)) {
-		case 1: {
-			switch(GetConVarInt(PrintCountry)) {
-				case 0: PrintToChatAll("%t", "Connected_Auth_1", gName, gAuth);
-				case 1: PrintToChatAll("%t", "Connected_Auth_2", gName, gCountry, gAuth);
-			}	
-		}
-		case 2:	{	
-			switch(GetConVarInt(PrintCountry)) {
-				case 0: PrintToChatAll("%t", "Connected_Ip_1", gName, gIp);
-				case 1: PrintToChatAll("%t", "Connected_Ip_2", gName, gCountry, gIp);
-			}	
-		}
-		case 3: {
-			switch(GetConVarInt(PrintCountry)) {
-				case 0: PrintToChatAll("%t", "Connected_1", gName, gAuth, gIp);
-				case 1: PrintToChatAll("%t", "Connected_2", gName, gCountry, gAuth, gIp);
-			}
-		}
-		case 4: {
-			switch(GetConVarInt(PrintCountry)) {
-				case 0: PrintToChatAll("%t", "Connected_Country_1", gName);
-				case 1: PrintToChatAll("%t", "Connected_Country_2", gName, gCountry);
-			}
-		}
-	}
-}
-
-public OnClientPostAdminCheck(client)
-{
-	if(IsFakeClient(client)) return;
-	if(GetConVarInt(ShowAll) == 3) return;
-	
-	decl String:Time[21],
-	     String:iFile[PLATFORM_MAX_PATH],
-		 String:gCountry[46],
-	     String:gName[MAX_NAME_LENGTH+1],
-		 String:gIp[16],
-		 String:gAuth[21];
-	
-	if(GetUserAdmin(client) != INVALID_ADMIN_ID && GetConVarInt(ShowAdmins) == 0) return;
-
-	GetConVarString(SoundFile, iFile, sizeof(iFile));	
-	GetClientName(client, gName, MAX_NAME_LENGTH);
-	GetClientIP(client, gIp, sizeof(gIp));
-	GetClientAuthString(client, gAuth, sizeof(gAuth));
-	
-	switch(GetConVarInt(CountryNameType))
+	if (sPath[0] == '\0')
 	{
-		case 1: {
-                        decl String:gCountryS[3];
-			GeoipCode2(gIp, gCountryS);
-			strcopy(gCountry,46,gCountryS);
-		}
-		case 2: {
-			GeoipCountry(gIp, gCountry, sizeof(gCountry));
-		}
+		return;
 	}
-	
-	if(strlen(gCountry) == 0) Format(gCountry,sizeof(gCountry),"%t","Network");
-	
-	FormatTime(Time, sizeof( Time ), "%m/%d/%y - %I:%M:%S", -1);
-
-	if(GetConVarInt(Sound) == 1) EmitSoundToAll(iFile);
-			
-	switch(log) {
-		case 0: PrintLogConnect(Time, gName, gCountry, gAuth, gIp);
-		case 1: {
-			PrintLogConnect(Time, gName, gCountry, gAuth, gIp);
-			WriteLogConnect(Time, gName, gCountry, gAuth, gIp);
-			}
-		case 2:	WriteLogConnect(Time, gName, gCountry, gAuth, gIp);
-	}
-}
-
-public PrintLogDisconnect(String:Time[], String:gName[], String:gCountry[], String:gAuth[], String:gIp[])
-{
-	switch(GetConVarInt(PrintMode)) {
-		case 1: {
-			switch(GetConVarInt(PrintCountry)) {
-				case 0: PrintToChatAll("%t", "Disconnected_Auth_1", gName, gAuth);
-				case 1: PrintToChatAll("%t", "Disconnected_Auth_2", gName, gCountry, gAuth);
-			}	
-		}
-		case 2:	{	
-			switch(GetConVarInt(PrintCountry)) {
-				case 0: PrintToChatAll("%t", "Disconnected_Ip_1", gName, gIp);
-				case 1: PrintToChatAll("%t", "Disconnected_Ip_2", gName, gCountry, gIp);
-			}	
-		}
-		case 3: {
-			switch(GetConVarInt(PrintCountry)) {
-				case 0: PrintToChatAll("%t", "Disconnected_1", gName, gAuth, gIp);
-				case 1: PrintToChatAll("%t", "Disconnected_2", gName, gCountry, gAuth, gIp);
-			}
-		}
-		case 4: {
-			switch(GetConVarInt(PrintCountry)) {
-				case 0: PrintToChatAll("%t", "Disconnected_Country_1", gName);
-				case 1: PrintToChatAll("%t", "Disconnected_Country_2", gName, gCountry);
-			}
-		}
-	}
-}
-
-public WriteLogDisconnect(String:Time[], String:gName[], String:gCountry[], String:gAuth[], String:gIp[])
-{
-	switch(GetConVarInt(PrintModeLog)) {
-		case 1: {
-			switch(GetConVarInt(PrintCountry)) {
-				case 0: WriteFileLine(File,"[%s] %s[%s] disconnected", Time, gName, gAuth);
-				case 1: WriteFileLine(File,"[%s] %s(%s)[%s] disconnected", Time, gName, gCountry, gAuth);
-			}	
-		}
-		case 2:	{	
-			switch(GetConVarInt(PrintCountry)) {
-				case 0: WriteFileLine(File,"[%s] %s[%s] disconnected", Time, gName, gIp);
-				case 1: WriteFileLine(File,"[%s] %s(%s)[%s] disconnected", Time, gName, gCountry, gIp);
-			}	
-		}
-		case 3: {
-			switch(GetConVarInt(PrintCountry)) {
-				case 0: WriteFileLine(File,"[%s] %s[%s][%s] disconnected", Time, gName, gAuth, gIp);
-				case 1: WriteFileLine(File,"[%s] %s(%s)[%s][%s] disconnected", Time, gName, gCountry, gAuth, gIp);
-			}
-		}
-		case 4: {
-			switch(GetConVarInt(PrintCountry)) {
-				case 0: WriteFileLine(File,"[%s] %s disconnected", Time, gName);
-				case 1: WriteFileLine(File,"[%s] %s(%s) disconnected", Time, gName, gCountry);
-			}
-		}
-	}
-	FlushFile(File);
-}
-
-public OnClientDisconnect(client)
-{
-	if(IsFakeClient(client)) return;
-	if(GetConVarInt(ShowAll) == 2) return;
-	
-	decl String:Time[21],
-	     String:iFile[PLATFORM_MAX_PATH],
-             String:gCountry[46],
-	     String:gName[MAX_NAME_LENGTH+1],
-	     String:gIp[16],
-	     String:gAuth[21];
-	
-	if(GetUserAdmin(client) != INVALID_ADMIN_ID && GetConVarInt(ShowAdmins) == 0) return;
-
-	GetConVarString(SoundFile, iFile, sizeof(iFile));	
-	GetClientName(client, gName, MAX_NAME_LENGTH);
-	GetClientIP(client, gIp, sizeof(gIp));
-	GetClientAuthString(client, gAuth, sizeof(gAuth));
-	
-	switch(GetConVarInt(CountryNameType))
+	else if (FileExists(sPath, true))
 	{
-		case 1: {
-                        decl String:gCountryS[3];
-			GeoipCode2(gIp, gCountryS);
-			strcopy(gCountry,46,gCountryS);
-		}
-		case 2: {
-			GeoipCountry(gIp, gCountry, sizeof(gCountry));
-		}
+		PrecacheSound(sPath, true);
 	}
-	
-	if(strlen(gCountry) == 0) Format(gCountry,sizeof(gCountry),"%t","Network");
+	else
+	{
+		LogMessage("%t %s", "File Not Found", sPath);
+	}
+}
 
-	FormatTime(Time, sizeof( Time ), "%m/%d/%y - %I:%M:%S", -1);
+stock const char g_sConnected[4][2][] =
+{
+	{
+		"Connected",
+		"Connected_Country"
+	},
+	{
+		"Connected_Auth",
+		"Connected_Auth_Country"
+	},
+	{
+		"Connected_IP",
+		"Connected_Country_IP"
+	},
+	{
+		"Connected_Auth_IP",
+		"Connected_Auth_Country_IP"
+	}
+};
 
-	if(GetConVarInt(Sound) == 1) EmitSoundToAll(iFile);
+public void OnClientPostAdminCheck(int client)
+{
+	Announce(client, 0, g_sConnected[g_hPrintMode.IntValue % 4][g_hPrintCountry.IntValue % 2], "connected");
+}
 
-	switch(log) {
-		case 0: PrintLogDisconnect(Time, gName, gCountry, gAuth, gIp);
-		case 1: {
-			PrintLogDisconnect(Time, gName, gCountry, gAuth, gIp);
-			WriteLogDisconnect(Time, gName, gCountry, gAuth, gIp);
-			}
-		case 2: WriteLogDisconnect(Time, gName, gCountry, gAuth, gIp);
+stock const char g_sDisconnected[4][2][] =
+{
+	{
+		"Disconnected",
+		"Disconnected_Country"
+	},
+	{
+		"Disconnected_Auth",
+		"Disconnected_Auth_Country"
+	},
+	{
+		"Disconnected_IP",
+		"Disconnected_Country_IP"
+	},
+	{
+		"Disconnected_Auth_IP",
+		"Disconnected_Auth_Country_IP"
+	}
+};
+
+public void OnClientDisconnect(int client)
+{
+	Announce(client, 1, g_sDisconnected[g_hPrintMode.IntValue % 4][g_hPrintCountry.IntValue % 2], "disconnected");
+}
+
+stock void Announce(int client, int type, const char[] translation, const char[] message)
+{
+	if (IsFakeClient(client))
+	{
+		return;
+	}
+	else if (!(g_hShowAll.IntValue & (1 << type)))
+	{
+		return;
+	}
+	else if(GetUserAdmin(client) != INVALID_ADMIN_ID && !g_hShowAdmins.BoolValue)
+	{
+		return;
+	}
+
+	char name[MAX_NAME_LENGTH];
+	char ip[16];
+	char auth[24];
+	char country[48];
+
+	GetClientName(client, name, sizeof(name));
+	GetClientIP(client, ip, sizeof(ip));
+	GetClientAuthId(client, AuthId_Steam2, auth, sizeof(auth));
+
+	GetCountryString(ip, country, sizeof(country));
+	if (country[0] == '\0')
+	{
+		Format(country, sizeof(country), "%t", "Network");
+	}
+
+	if (g_hSound.BoolValue)
+	{
+		EmitSoundToAll(g_sSoundFilePath);
+	}
+
+	if (g_iLogging & (1 << 0))
+	{
+		PrintToChatAll("%t", translation, name, auth, country, ip);
+	}
+	if (g_iLogging & (1 << 1))
+	{
+		LogCDMessage("%s(%s)[%s][%s] %s", name, auth, country, ip, message);
+	}
+}
+
+stock void GetCountryString(const char[] ip, char[] country, int maxlength)
+{
+	if (g_hCountryAbbr.BoolValue)
+	{
+		char sCountryAbbr[3];
+		GeoipCode2(ip, sCountryAbbr);
+		strcopy(country, maxlength, sCountryAbbr);
+	}
+	else
+	{
+		GeoipCountry(ip, country, maxlength);
 	}
 }
